@@ -1,0 +1,4 @@
+bin/*
+pkg/*
+collection.json
+config.json
