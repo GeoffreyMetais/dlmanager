@@ -65,7 +65,7 @@ func browseDir(w rest.ResponseWriter, req *rest.Request) {
             rest.Error(w, "Permission denied", 503)
             return
         }
-	
+
 	fi, err := os.Stat(path)
         if err != nil {
             rest.NotFound(w, req)
@@ -123,16 +123,16 @@ func listShares(w rest.ResponseWriter, req *rest.Request) {
     w.WriteJson(&filesCollection.Pool)
 }
 
-func Init(){
+func init(){
     configFile, err := os.Open("config.json")
     if err != nil {
         fmt.Println("opening config file", err.Error())
     } else {
+        defer configFile.Close();
         jsonParser := json.NewDecoder(configFile)
         if err = jsonParser.Decode(&settings); err != nil {
             fmt.Println("parsing config file", err.Error())
         }
-        configFile.Close()
     }
     ReadCollection()
 }
@@ -150,7 +150,6 @@ func test() {
 }
 
 func main() {
-        Init()
 	handler := rest.ResourceHandler{
             PreRoutingMiddlewares: []rest.Middleware{
                         &rest.CorsMiddleware{
