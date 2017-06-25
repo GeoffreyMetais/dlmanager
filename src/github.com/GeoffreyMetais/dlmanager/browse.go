@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -155,30 +156,21 @@ func test() {
 }
 
 func main() {
-	handler := rest.ResourceHandler{
-		PreRoutingMiddlewares: []rest.Middleware{
-			&rest.CorsMiddleware{
-				RejectNonCorsRequests: false,
-				OriginValidator: func(origin string, request *rest.Request) bool {
-					return true //origin == "http://localhost:8000"
-				},
-				AllowedMethods: []string{"GET", "POST", "PUT"},
-				AllowedHeaders: []string{
-					"Accept", "Content-Type", "X-Custom-Header", "Origin"},
-				AccessControlAllowCredentials: true,
-				AccessControlMaxAge:           3600,
-			},
-		},
-	}
-	handler.SetRoutes(
-		&rest.Route{"GET", "/go/browse/:dir", browseDir},
-		&rest.Route{"POST", "/go/browse", browseDir},
-		&rest.Route{"GET", "/go/browse", browseDir},
-		&rest.Route{"GET", "/go/dl/:name", download},
-		&rest.Route{"POST", "/go/add", add},
-		&rest.Route{"DELETE", "/go/del/:name", remove},
-		&rest.Route{"GET", "/go/list", listShares},
+	api := rest.NewApi()
+	api.Use(rest.DefaultProdStack...)
+	router, err := rest.MakeRouter(
+		rest.Get("/go/browse/:dir", browseDir),
+		rest.Post("/go/browse", browseDir),
+		rest.Get("/go/browse", browseDir),
+		rest.Get("/go/dl/:name", download),
+		rest.Post("/go/add", add),
+		rest.Delete("/go/del/:name", remove),
+		rest.Get("/go/list", listShares),
 	)
-	//http.HandleFunc("/dl", download)
-	http.ListenAndServe(settings.Port, &handler)
+	if err != nil {
+		log.Fatal(err)
+	}
+	api.SetApp(router)
+	log.Fatal(http.ListenAndServe(settings.Port, api.MakeHandler()))
+
 }
