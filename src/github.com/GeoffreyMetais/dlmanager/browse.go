@@ -16,37 +16,37 @@ import (
 var settings struct {
 	Root    string
 	Port    string
-	BaseUrl string
+	BaseURL string
 }
 
 var filesCollection struct {
-	Pool map[string]SharedFile `json:"sharesList"`
+	Pool map[string]sharedFile `json:"sharesList"`
 }
 
-type SharedFile struct {
+type sharedFile struct {
 	Name string `json:"name"`
 	Path string `json:"path"`
 	Link string `json:"link"`
 }
 
-type User struct {
-	Id   string `json:"id"`
+type user struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type Directory struct {
+type directory struct {
 	Path  string `json:"path"`
-	Files []File `json:"files"`
+	Files []file `json:"files"`
 }
 
-type File struct {
+type file struct {
 	Name  string `json:"name"`
 	Path  string `json:"path"`
 	IsDir bool   `json:"isDirectory"`
 	Size  int64  `json:"size"`
 }
 
-type ReqBody struct {
+type reqBody struct {
 	Path string `json:"path"`
 	User string `json:"user"`
 }
@@ -55,7 +55,7 @@ func browseDir(w rest.ResponseWriter, req *rest.Request) {
 	//basePath := "/mnt/hdd/usb/"
 	//basePath := "/home/metais/Vidéos/"
 	basePath := settings.Root
-	var request ReqBody
+	var request reqBody
 	req.DecodeJsonPayload(&request)
 	var path string
 	if len(request.Path) > 0 {
@@ -79,16 +79,16 @@ func browseDir(w rest.ResponseWriter, req *rest.Request) {
 		}
 		filesInfo, _ := ioutil.ReadDir(path)
 		//	files := [len(filesInfo)]string
-		files := make([]File, len(filesInfo))
+		files := make([]file, len(filesInfo))
 		for i := 0; i < len(filesInfo); i++ {
-			files[i] = File{
+			files[i] = file{
 				Name:  filesInfo[i].Name(),
 				Path:  path + filesInfo[i].Name(),
 				Size:  filesInfo[i].Size(),
 				IsDir: filesInfo[i].IsDir(),
 			}
 		}
-		dir := Directory{
+		dir := directory{
 			Path:  path,
 			Files: files,
 		}
@@ -122,7 +122,7 @@ func download(w rest.ResponseWriter, req *rest.Request) {
 
 func listShares(w rest.ResponseWriter, req *rest.Request) {
 	//     w.Header().Set("Access-Control-Allow-Origin", "*")
-	list := make([]SharedFile, 0, len(filesCollection.Pool))
+	list := make([]sharedFile, 0, len(filesCollection.Pool))
 	for _, value := range filesCollection.Pool {
 		list = append(list, value)
 	}
@@ -140,7 +140,7 @@ func init() {
 			fmt.Println("parsing config file", err.Error())
 		}
 	}
-	ReadCollection()
+	readCollection()
 }
 
 func test() {
