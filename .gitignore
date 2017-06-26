@@ -2,4 +2,4 @@ bin/*
 pkg/*
 collection.json
 config.json
-src/github.com/GeoffreyMetais/dlmanager/dlmanager
+dlmanager
