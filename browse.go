@@ -161,12 +161,12 @@ func main() {
 	api.Use(statusMw)
 	api.Use(rest.DefaultDevStack...)
 	router, err := rest.MakeRouter(
-		rest.Get("/go/browse/:dir", browseDir),
+		rest.Get("/go/browse/#dir", browseDir),
 		rest.Post("/go/browse", browseDir),
 		rest.Get("/go/browse", browseDir),
-		rest.Get("/go/dl/:name", download),
+		rest.Get("/go/dl/#name", download),
 		rest.Post("/go/add", add),
-		rest.Delete("/go/del/:name", remove),
+		rest.Delete("/go/del/#name", remove),
 		rest.Get("/go/list", listShares),
 		rest.Get("/go/status", func(w rest.ResponseWriter, r *rest.Request) {
 			w.WriteJson(statusMw.GetStatus())
