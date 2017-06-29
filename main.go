@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/GeoffreyMetais/dlmanager/db"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,21 +14,6 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-var settings struct {
-	Root    string
-	Port    string
-	BaseURL string
-}
-
-var filesCollection struct {
-	Pool map[string]sharedFile `json:"sharesList"`
-}
-
-type sharedFile struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
-	Link string `json:"link"`
-}
 
 type user struct {
 	ID   string `json:"id"`
@@ -54,7 +40,7 @@ type reqBody struct {
 func browseDir(w rest.ResponseWriter, req *rest.Request) {
 	//basePath := "/mnt/hdd/usb/"
 	//basePath := "/home/metais/Vidéos/"
-	basePath := settings.Root
+	basePath := db.Settings.Root
 	var request reqBody
 	req.DecodeJsonPayload(&request)
 	var path string
@@ -104,8 +90,8 @@ func download(w rest.ResponseWriter, req *rest.Request) {
 	fmt.Println("Download ")
 	var filename = req.PathParam("name")
 	fmt.Println("Download ", filename)
-	fmt.Println("path ", filesCollection.Pool[filename].Path)
-	fi, err := os.Stat(filesCollection.Pool[filename].Path)
+	fmt.Println("path ", db.FilesCollection.Pool[filename].Path)
+	fi, err := os.Stat(db.FilesCollection.Pool[filename].Path)
 	if err != nil {
 		rest.NotFound(w, req)
 		return
@@ -117,13 +103,13 @@ func download(w rest.ResponseWriter, req *rest.Request) {
 	//   w.Header().Add("Content-Type", "application/force-download")
 	w.Header().Add("Content-Disposition", "attachment; filename="+fi.Name())
 	w.Header().Add("Content-length", strconv.FormatInt(fi.Size(), 10))
-	http.ServeFile(w.(http.ResponseWriter), req.Request, filesCollection.Pool[filename].Path)
+	http.ServeFile(w.(http.ResponseWriter), req.Request, db.FilesCollection.Pool[filename].Path)
 }
 
 func listShares(w rest.ResponseWriter, req *rest.Request) {
 	//     w.Header().Set("Access-Control-Allow-Origin", "*")
-	list := make([]sharedFile, 0, len(filesCollection.Pool))
-	for _, value := range filesCollection.Pool {
+	list := make([]db.SharedFile, 0, len(db.FilesCollection.Pool))
+	for _, value := range db.FilesCollection.Pool {
 		list = append(list, value)
 	}
 	w.WriteJson(list)
@@ -136,20 +122,20 @@ func init() {
 	} else {
 		defer configFile.Close()
 		jsonParser := json.NewDecoder(configFile)
-		if err = jsonParser.Decode(&settings); err != nil {
+		if err = jsonParser.Decode(&db.Settings); err != nil {
 			fmt.Println("parsing config file", err.Error())
 		}
 	}
-	readCollection()
+	db.ReadCollection()
 }
 
 func test() {
 	//     ReadCollection()
-	for filename := range filesCollection.Pool {
-		fmt.Println("name", filename)
-		fmt.Println("path", filesCollection.Pool[filename].Path)
-		fmt.Println("Link", filesCollection.Pool[filename].Link)
-	}
+	//for filename := range db.FilesCollection.Pool {
+	//	fmt.Println("name", filename)
+	//	fmt.Println("path", filesCollection.Pool[filename].Path)
+	//	fmt.Println("Link", filesCollection.Pool[filename].Link)
+	//}
 	//     filesCollection.Pool["troisème"] = SharedFile{"DBZ","/home/metais/Vidéos/[DB-Z.com] Dragon Ball Z Battle of Gods [720p][VOSTFR].mp4"}
 	//     SaveCollection()
 	//     fmt.Println("Collection saved")
@@ -165,8 +151,8 @@ func main() {
 		rest.Post("/go/browse", browseDir),
 		rest.Get("/go/browse", browseDir),
 		rest.Get("/go/dl/#name", download),
-		rest.Post("/go/add", add),
-		rest.Delete("/go/del/#name", remove),
+		rest.Post("/go/add", db.Add),
+		rest.Delete("/go/del/#name", db.Remove),
 		rest.Get("/go/list", listShares),
 		rest.Get("/go/status", func(w rest.ResponseWriter, r *rest.Request) {
 			w.WriteJson(statusMw.GetStatus())
@@ -176,6 +162,6 @@ func main() {
 		log.Fatal(err)
 	}
 	api.SetApp(router)
-	log.Fatal(http.ListenAndServe(settings.Port, api.MakeHandler()))
+	log.Fatal(http.ListenAndServe(db.Settings.Port, api.MakeHandler()))
 
 }
