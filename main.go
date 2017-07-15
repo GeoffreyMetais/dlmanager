@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/GeoffreyMetais/dlmanager/db"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,9 +10,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GeoffreyMetais/dlmanager/db"
+
 	"github.com/ant0ine/go-json-rest/rest"
 )
-
 
 type user struct {
 	ID   string `json:"id"`
@@ -87,11 +87,8 @@ func browseDir(w rest.ResponseWriter, req *rest.Request) {
 }
 
 func download(w rest.ResponseWriter, req *rest.Request) {
-	fmt.Println("Download ")
-	var filename = req.PathParam("name")
-	fmt.Println("Download ", filename)
-	fmt.Println("path ", db.FilesCollection.Pool[filename].Path)
-	fi, err := os.Stat(db.FilesCollection.Pool[filename].Path)
+	share := db.FindShare(req.PathParam("name"))
+	fi, err := os.Stat(share.Path)
 	if err != nil {
 		rest.NotFound(w, req)
 		return
@@ -103,15 +100,12 @@ func download(w rest.ResponseWriter, req *rest.Request) {
 	//   w.Header().Add("Content-Type", "application/force-download")
 	w.Header().Add("Content-Disposition", "attachment; filename="+fi.Name())
 	w.Header().Add("Content-length", strconv.FormatInt(fi.Size(), 10))
-	http.ServeFile(w.(http.ResponseWriter), req.Request, db.FilesCollection.Pool[filename].Path)
+	http.ServeFile(w.(http.ResponseWriter), req.Request, share.Path)
 }
 
 func listShares(w rest.ResponseWriter, req *rest.Request) {
 	//     w.Header().Set("Access-Control-Allow-Origin", "*")
-	list := make([]db.SharedFile, 0, len(db.FilesCollection.Pool))
-	for _, value := range db.FilesCollection.Pool {
-		list = append(list, value)
-	}
+	list := db.ListShares()
 	w.WriteJson(list)
 }
 
@@ -126,7 +120,6 @@ func init() {
 			fmt.Println("parsing config file", err.Error())
 		}
 	}
-	db.ReadCollection()
 }
 
 func test() {
@@ -146,6 +139,7 @@ func main() {
 	statusMw := &rest.StatusMiddleware{}
 	api.Use(statusMw)
 	api.Use(rest.DefaultDevStack...)
+	defer db.ReadCollection().Close()
 	router, err := rest.MakeRouter(
 		rest.Get("/go/browse/#dir", browseDir),
 		rest.Post("/go/browse", browseDir),
