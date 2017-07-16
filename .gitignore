@@ -2,4 +2,6 @@ bin/*
 pkg/*
 collection.json
 config.json
+.vscode/
+test.db
 dlmanager
