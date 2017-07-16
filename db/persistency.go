@@ -55,7 +55,7 @@ func ReadCollection() *gorm.DB {
 	var err error
 	database, err = gorm.Open("sqlite3", "test.db")
 	if err != nil {
-		panic("failed to connect database")
+		panic(err)
 	}
 	database.AutoMigrate(&SharedFile{})
 	return database
