@@ -93,9 +93,6 @@ func download(w rest.ResponseWriter, req *rest.Request) {
 		rest.NotFound(w, req)
 		return
 	}
-	fmt.Println("stats ", fi.Mode())
-	fmt.Println("stats name ", fi.Name())
-	fmt.Println("formatted size ", strconv.FormatInt(fi.Size(), 10))
 	w.Header().Add("Content-type", "application/octet-stream")
 	//   w.Header().Add("Content-Type", "application/force-download")
 	w.Header().Add("Content-Disposition", "attachment; filename="+fi.Name())
@@ -105,8 +102,7 @@ func download(w rest.ResponseWriter, req *rest.Request) {
 
 func listShares(w rest.ResponseWriter, req *rest.Request) {
 	//     w.Header().Set("Access-Control-Allow-Origin", "*")
-	list := db.ListShares()
-	w.WriteJson(list)
+	w.WriteJson(db.ListShares())
 }
 
 func init() {
@@ -122,24 +118,12 @@ func init() {
 	}
 }
 
-func test() {
-	//     ReadCollection()
-	//for filename := range db.FilesCollection.Pool {
-	//	fmt.Println("name", filename)
-	//	fmt.Println("path", filesCollection.Pool[filename].Path)
-	//	fmt.Println("Link", filesCollection.Pool[filename].Link)
-	//}
-	//     filesCollection.Pool["troisème"] = SharedFile{"DBZ","/home/metais/Vidéos/[DB-Z.com] Dragon Ball Z Battle of Gods [720p][VOSTFR].mp4"}
-	//     SaveCollection()
-	//     fmt.Println("Collection saved")
-}
-
 func main() {
 	api := rest.NewApi()
 	statusMw := &rest.StatusMiddleware{}
 	api.Use(statusMw)
 	api.Use(rest.DefaultDevStack...)
-	defer db.ReadCollection().Close()
+	defer db.PrepareDb().Close()
 	router, err := rest.MakeRouter(
 		rest.Get("/go/browse/#dir", browseDir),
 		rest.Post("/go/browse", browseDir),

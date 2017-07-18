@@ -51,7 +51,7 @@ func FindShare(filename string) SharedFile {
 	return share
 }
 
-func ReadCollection() *gorm.DB {
+func PrepareDb() *gorm.DB {
 	var err error
 	database, err = gorm.Open("sqlite3", "test.db")
 	if err != nil {
