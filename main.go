@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +15,13 @@ import (
 
 	"github.com/ant0ine/go-json-rest/rest"
 )
+
+//Settings json object structure
+var Settings struct {
+	Root    string
+	Port    string
+	BaseURL string
+}
 
 type user struct {
 	ID   string `json:"id"`
@@ -40,7 +48,7 @@ type reqBody struct {
 func browseDir(w rest.ResponseWriter, req *rest.Request) {
 	//basePath := "/mnt/hdd/usb/"
 	//basePath := "/home/metais/Vidéos/"
-	basePath := db.Settings.Root
+	basePath := Settings.Root
 	var request reqBody
 	req.DecodeJsonPayload(&request)
 	var path string
@@ -105,6 +113,22 @@ func listShares(w rest.ResponseWriter, req *rest.Request) {
 	w.WriteJson(db.ListShares())
 }
 
+func add(w rest.ResponseWriter, req *rest.Request) {
+	var newfile db.SharedFile
+	req.DecodeJsonPayload(&newfile)
+	if len(newfile.Path) > 0 && len(newfile.Name) > 0 {
+		newfile.Link = Settings.BaseURL + "go/dl/" + newfile.Name
+		db.Add(&newfile)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func remove(w rest.ResponseWriter, req *rest.Request) {
+	filename, _ := url.QueryUnescape(req.PathParam("name"))
+	db.Remove(filename)
+	w.WriteHeader(http.StatusOK)
+}
+
 func init() {
 	configFile, err := os.Open("config.json")
 	if err != nil {
@@ -112,7 +136,7 @@ func init() {
 	} else {
 		defer configFile.Close()
 		jsonParser := json.NewDecoder(configFile)
-		if err = jsonParser.Decode(&db.Settings); err != nil {
+		if err = jsonParser.Decode(&Settings); err != nil {
 			fmt.Println("parsing config file", err.Error())
 		}
 	}
@@ -129,8 +153,8 @@ func main() {
 		rest.Post("/go/browse", browseDir),
 		rest.Get("/go/browse", browseDir),
 		rest.Get("/go/dl/#name", download),
-		rest.Post("/go/add", db.Add),
-		rest.Delete("/go/del/#name", db.Remove),
+		rest.Post("/go/add", add),
+		rest.Delete("/go/del/#name", remove),
 		rest.Get("/go/list", listShares),
 		rest.Get("/go/status", func(w rest.ResponseWriter, r *rest.Request) {
 			w.WriteJson(statusMw.GetStatus())
@@ -140,6 +164,6 @@ func main() {
 		log.Fatal(err)
 	}
 	api.SetApp(router)
-	log.Fatal(http.ListenAndServe(db.Settings.Port, api.MakeHandler()))
+	log.Fatal(http.ListenAndServe(Settings.Port, api.MakeHandler()))
 
 }
