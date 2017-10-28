@@ -127,7 +127,7 @@ func add(w rest.ResponseWriter, req *rest.Request) {
 	if len(newfile.Path) > 0 && len(newfile.Name) > 0 {
 		newfile.Link = db.Settings.BaseURL + "go/dl/" + newfile.Name
 		db.Add(&newfile)
-		w.WriteHeader(http.StatusOK)
+		w.WriteJson(newfile)
 	}
 }
 
