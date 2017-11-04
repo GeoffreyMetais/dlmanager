@@ -132,7 +132,7 @@ func add(w rest.ResponseWriter, req *rest.Request) {
 }
 
 func remove(w rest.ResponseWriter, req *rest.Request) {
-	filename, _ := url.QueryUnescape(req.PathParam("name"))
+	filename, _ := url.PathUnescape(req.PathParam("name"))
 	db.Remove(filename)
 	w.WriteHeader(http.StatusOK)
 }
