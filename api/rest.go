@@ -125,7 +125,7 @@ func add(w rest.ResponseWriter, req *rest.Request) {
 	var newfile db.SharedFile
 	req.DecodeJsonPayload(&newfile)
 	if len(newfile.Path) > 0 && len(newfile.Name) > 0 {
-		newfile.Link = db.Settings.BaseURL + "dl/" + newfile.Name
+		newfile.Link = db.Settings.BaseURL + "go/dl/" + newfile.Name
 		db.Add(&newfile)
 		w.WriteJson(newfile)
 	}
