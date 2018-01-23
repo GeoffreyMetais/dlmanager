@@ -42,14 +42,14 @@ func Run() {
 	api.Use(statusMw)
 	api.Use(rest.DefaultDevStack...)
 	router, err := rest.MakeRouter(
-		rest.Get("/go/browse/#dir", browseDir),
-		rest.Post("/go/browse", browseDir),
-		rest.Get("/go/browse", browseDir),
-		rest.Get("/go/dl/#name", download),
-		rest.Post("/go/add", add),
-		rest.Delete("/go/del/#name", remove),
-		rest.Get("/go/list", listShares),
-		rest.Get("/go/status", func(w rest.ResponseWriter, r *rest.Request) {
+		rest.Get("/browse/#dir", browseDir),
+		rest.Post("/browse", browseDir),
+		rest.Get("/browse", browseDir),
+		rest.Get("/dl/#name", download),
+		rest.Post("/add", add),
+		rest.Delete("/del/#name", remove),
+		rest.Get("/list", listShares),
+		rest.Get("/status", func(w rest.ResponseWriter, r *rest.Request) {
 			w.WriteJson(statusMw.GetStatus())
 		}),
 	)
@@ -125,7 +125,7 @@ func add(w rest.ResponseWriter, req *rest.Request) {
 	var newfile db.SharedFile
 	req.DecodeJsonPayload(&newfile)
 	if len(newfile.Path) > 0 && len(newfile.Name) > 0 {
-		newfile.Link = db.Settings.BaseURL + "go/dl/" + newfile.Name
+		newfile.Link = db.Settings.BaseURL + "dl/" + newfile.Name
 		db.Add(&newfile)
 		w.WriteJson(newfile)
 	}
