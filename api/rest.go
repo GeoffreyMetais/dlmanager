@@ -105,7 +105,8 @@ func browseDir(w rest.ResponseWriter, req *rest.Request) {
 }
 
 func download(w rest.ResponseWriter, req *rest.Request) {
-	share := db.FindShare(req.PathParam("name"))
+	filename, _ := url.PathUnescape(req.PathParam("name"))
+	share := db.FindShare(filename)
 	fi, err := os.Stat(share.Path)
 	if err != nil {
 		rest.NotFound(w, req)

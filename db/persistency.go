@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/jinzhu/gorm"
@@ -54,9 +53,8 @@ func Remove(filename string) {
 
 //FindShare returns SharedFile corresponding to filename
 func FindShare(filename string) SharedFile {
-	name, _ := url.QueryUnescape(filename)
-	share := SharedFile{Name: name, Path: "", Link: ""}
-	database.Find(&share)
+	share := SharedFile{}
+	database.Find(&share, "name = ?", filename)
 	return share
 }
 
